@@ -1,0 +1,5 @@
+taskio:
+  program:
+    name: doit
+  commands:
+    - doit.commands
