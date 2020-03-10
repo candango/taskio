@@ -1,2 +1,1 @@
-cartola==0.2
-pyyaml==5.3
+cartola==0.4
