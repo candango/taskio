@@ -14,14 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from cartola.config import load_yaml_file
 import logging
 import os
-from taskio import config, command
+from taskio import cli
 import sys
-
-# Set logger to debug level
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -37,5 +34,5 @@ if DOIT_ROOT not in sys.path:
     sys.path.append(DOIT_ROOT)
 
 if __name__ == "__main__":
-    conf = config.load_yaml_file(DOIT_CONFIG_FILE)
-    command.run(conf)
+    conf = load_yaml_file(DOIT_CONFIG_FILE)
+    cli.run(conf)

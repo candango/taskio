@@ -1,5 +1,6 @@
 taskio:
   program:
-    name: doit
+    name: doit.__program_name__
+    version: doit.__version__
   commands:
-    - doit.commands
+    - doit.commands.list
