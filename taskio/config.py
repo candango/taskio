@@ -13,16 +13,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import yaml
+
+from cartola.config import get_from_string
 
 
-def load_yaml_file(path):
-    """ Returns the parsed structure from a yaml config file.
+def resolve_name(reference):
+    if reference is not None:
+        result = get_from_string(reference)
+        if result is not None:
+            if callable(result):
+                return result()
+            return result
+    return reference
 
-    :param path: Path where the yaml file is located.
-    :return: The yaml configuration represented by the yaml file.
-    """
-    result = None
-    with open(path, 'r') as steam:
-        result = yaml.safe_load(steam)
-    return result
+
+def resolve_version(reference):
+    if reference is not None:
+        result = get_from_string(reference)
+        if callable(result):
+            return result()
+        return result
+    return reference

@@ -15,9 +15,10 @@
 # limitations under the License.
 
 from .argparse_ext import TaskioArgumentError, TaskioArgumentParser
-from .config import get_from_string, resolve_name, resolve_version
+from .config import resolve_name, resolve_version
 import argparse
 from cartola import sysexits
+from cartola.config import get_from_string
 import logging
 import os
 import sys
