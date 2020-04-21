@@ -17,12 +17,16 @@
 import taskio
 from setuptools import setup
 from codecs import open
+import sys
+
 try:
     # for pip >= 10
     from pip._internal.req import parse_requirements
 except ImportError:
     # for pip <= 9.0.3
-    from pip.req import parse_requirements
+    print("error: Upgrade to a pip version newer than 10. Run \"pip install "
+          "--upgrade pip\".")
+    sys.exit(1)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
