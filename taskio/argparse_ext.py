@@ -19,9 +19,38 @@ from gettext import gettext as _
 
 
 class TaskioArgumentError(Exception):
-    """ An error thrown while parsing arguments with FirenadoArgumentParser.
+    """ An error thrown while parsing arguments with TaskioArgumentParser.
     """
-    pass
+
+    def __init__(self, *args, **kwargs):
+        super(TaskioArgumentError, self).__init__(*args, **kwargs)
+        self._help = kwargs.get("help", None)
+        self._source = kwargs.get("source", None)
+        self._reason = kwargs.get("reason", None)
+
+    @property
+    def help(self):
+        return self._help
+
+    @help.setter
+    def help(self, help):
+        self._help = help
+
+    @property
+    def source(self):
+        return self._source
+
+    @source.setter
+    def source(self, source):
+        self._source = source
+
+    @property
+    def reason(self):
+        return self._reason
+
+    @reason.setter
+    def reason(self, reason):
+        self._reason = reason
 
 
 class TaskioArgumentParser(argparse.ArgumentParser):
