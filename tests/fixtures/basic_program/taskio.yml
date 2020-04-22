@@ -1,0 +1,6 @@
+taskio:
+  program:
+    name: taskio
+    version: 0.0.1
+  commands:
+    - doit.commands.list
