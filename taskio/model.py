@@ -92,7 +92,7 @@ class TaskioCategory(object):
         exists.
         """
         for category_command in self.commands:
-            if category_command.match(self.namespace.command):
+            if category_command.match(command):
                 return category_command
         return None
 
@@ -132,15 +132,13 @@ class TaskioCommand(object):
         self.parent = kwargs.get("parent", None)
 
         tasks = kwargs.get("tasks", None)
-        self.tasks = []
+        self._tasks = []
         if tasks is not None:
             if isinstance(tasks, list):
                 for task in tasks:
                     self.tasks.append(task(self))
             else:
                 self.tasks.append(tasks(self))
-
-
     @property
     def name(self):
         return self._name
@@ -200,6 +198,19 @@ class TaskioCommand(object):
     def program(self, program):
         self._program = program
 
+    @property
+    def tasks(self):
+        return self._tasks
+
+    @tasks.setter
+    def tasks(self, tasks):
+        self._tasks = tasks
+
+
+    @property
+    def has_sub_commands(self):
+        return len(self.sub_commands) > 0
+
     def load(self, program):
         self._program = program
         if not self.program.has_category(self.category_name):
@@ -208,6 +219,46 @@ class TaskioCommand(object):
 
     def match(self, command):
         return command in self.commands
+
+    def run(self, args):
+        print(args)
+        print(self.has_sub_commands)
+        subcommands_resolved = False
+        if self.has_sub_commands:
+            # TODO handle args with size 1
+            unresolved_args = args[1:]
+            for subcommand in self.sub_commands:
+                if subcommand.name == unresolved_args[0]:
+                    subcommand.run(unresolved_args)
+                    subcommands_resolved = True
+                    break
+        else:
+            self.run_tasks(args)
+        exit(0)
+        if not self.has_sub_commands:
+            self.run_tasks(args)
+            exit(0)
+
+    def run_tasks(self, args):
+        cmd_parser = TaskioArgumentParser(
+            prog=self.name, usage='%(prog)s [options]')
+        cmd_parser.add_argument("command", help="Command to executed")
+        try:
+            for task in self.tasks:
+                task.add_arguments(cmd_parser)
+            namespace = cmd_parser.parse_args(args)
+            for task in self.tasks:
+                task.run(namespace)
+        except TaskioArgumentError as error:
+            error.source = self
+            command_help = ""
+            error_message = task.get_error_message(cmd_parser, error)
+            for task in self.tasks:
+                error_message = task.get_error_message(cmd_parser, error)
+                if error_message:
+                    command_help += "\n".join([command_help, error_message])
+            error.help = command_help
+            raise error
 
 
 class TaskioProgram(object):
@@ -278,7 +329,6 @@ class TaskioProgram(object):
 
         for name, category in self.categories.items():
             if name == self._namespace.command:
-                self._command_index += 1
                 return category
 
         return None
@@ -330,19 +380,22 @@ class TaskioProgram(object):
                 add_help=False)
             self.parser.add_argument("-h", "--help", default=argparse.SUPPRESS)
             self.parser.add_argument("command", help="Command to executed")
-            print(self._command_index)
-            self._namespace = self.parser.parse_args(self.current_args())
+            self._namespace = self.parser.parse_args([self.current_args()[0]])
 
     def run(self, command):
-        command.run(sys.argv[self.command_index:])
+        try:
+            command.run(self.current_args())
+        except TaskioArgumentError as error:
+            print(error.help)
+            sys.exit(sysexits.EX_MISUSE)
 
     def current_args(self):
-        return self._args[self._command_index:1]
+        return self._args[self._command_index:]
 
     def what_to_run(self, category):
-        print(self._command_index)
         try:
-            return category.get_existing_command(self.current_args()[0])
+            what_to_run = category.get_existing_command(self.current_args()[0])
+            return what_to_run
         except IndexError:
             return None
 
@@ -376,3 +429,39 @@ class TaskioProgram(object):
         #     firenado_version=".".join(map(str, firenado.__version__))).decode(
         #     sys.stdout.encoding)
         return header_message
+
+
+class TaskioTask(object):
+    """
+    Define a Taskio tasks. Tasks are the concrete actions executed by a
+    command.
+    """
+    def __init__(self, action):
+        self.action = action
+
+    def add_arguments(self, parser):
+        """
+        Implement this method to add arguments to the current argparse parser
+        being handled by the command.
+
+        :param TaskioArgumentParser parser:
+        """
+        pass
+
+    def get_help(self):
+        """
+        Implement this method to add a help text to the help message to be
+        displayed by the command.
+        """
+        return None
+
+    def get_error_message(self, parser, error):
+        if hasattr(error, "message"):
+            return error.message
+        return str(error)
+
+    def run(self, namespace=None):
+        """
+        Task implementation is done here.
+        """
+        pass

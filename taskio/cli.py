@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)
 _TASKIO_NO_CATEGORY_ = "__taskio_no_category__"
 _program_name = None
 _program_version = None
-program = None
 
 
 def run(conf, **kwargs):
@@ -42,15 +41,10 @@ def run(conf, **kwargs):
         sys.exit(sysexits.EX_FATAL_ERROR)
 
     program = TaskioProgram(conf=conf, root=root)
-    # TODO: we need to solve this, this is a monkey patch for commands to find
-    # the program in the constructor
-    sys.modules[__name__].program = program
     program.load()
     category = program.what_category()
     if category is not None:
         command = program.what_to_run(category)
-        print(command)
-        sys.exit()
         if command is not None:
             program.run(command)
 
