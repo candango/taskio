@@ -23,10 +23,6 @@ import sys
 categories = {}
 logger = logging.getLogger(__name__)
 
-_TASKIO_NO_CATEGORY_ = "__taskio_no_category__"
-_program_name = None
-_program_version = None
-
 
 def run(conf, **kwargs):
     root = kwargs.get("root", "taskio")

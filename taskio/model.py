@@ -419,8 +419,8 @@ class TaskioProgram(object):
             header_message = "%s %s" % (header_message,self._version)
         if usage:
             test = """{% if usage %}
-    Usage: {{ parser.prog }} [-h] {%raw usage_message %}
-    {% end %}"""
+Usage: {{ parser.prog }} [-h] {%raw usage_message %}
+{% end %}"""
 
         # loader = template.Loader(os.path.join(
         #     firenado.conf.ROOT, 'management', 'templates', 'help'))
