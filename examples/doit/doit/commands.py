@@ -1,7 +1,7 @@
 from . import tasks
 from taskio.model import TaskioCommand
 
-list = [
+_list = [
     TaskioCommand(
         "help1",
         "Help Commands",
