@@ -15,12 +15,9 @@
 # limitations under the License.
 
 from .argparse_ext import TaskioArgumentError, TaskioArgumentParser
-from .config import resolve_name, resolve_version
 import argparse
 from cartola import sysexits
-from cartola.config import get_from_string
 import logging
-import os
 import sys
 
 logger = logging.getLogger(__name__)
@@ -206,6 +203,10 @@ class TaskioCommand(object):
     def tasks(self, tasks):
         self._tasks = tasks
 
+    @property
+    def usage(self):
+        usage = "%s" % self.name
+        return usage
 
     @property
     def has_sub_commands(self):
@@ -225,12 +226,16 @@ class TaskioCommand(object):
         print(self.has_sub_commands)
         subcommands_resolved = False
         if self.has_sub_commands:
-            # TODO handle args with size 1
+            if len(args) == 1:
+                error = TaskioArgumentError()
+                error.source = self
+                error.reason = "Sub-command not provided."
+                error.show_usage = True
+                raise error
             unresolved_args = args[1:]
             for subcommand in self.sub_commands:
                 if subcommand.name == unresolved_args[0]:
                     subcommand.run(unresolved_args)
-                    subcommands_resolved = True
                     break
         else:
             self.run_tasks(args)
@@ -266,7 +271,7 @@ class TaskioProgram(object):
     def __init__(self, **kwargs):
         self._whole_conf = kwargs.get("conf", {})
         self._args = None
-        self._command_index = None
+        self._command_index = 0
         self._name = None
         self._namespace = None
         self._parser = None
@@ -275,6 +280,21 @@ class TaskioProgram(object):
         self._categories = dict()
         self._TASKIO_NO_CATEGORY_ = "__taskio_no_category__"
         self.add_category(self._TASKIO_NO_CATEGORY_)
+
+    @property
+    def args(self):
+        return self._args
+
+    @args.setter
+    def args(self, args):
+        self._args = args
+        if len(self._args) == 0:
+            # As command is positional let's add a default if none.
+            self._args.append("help")
+        self._parser = TaskioArgumentParser(prog=self.name, add_help=False)
+        self._parser.add_argument("-h", "--help", default=argparse.SUPPRESS)
+        self._parser.add_argument("command", help="Command to executed")
+        self._namespace = self.parser.parse_args([self.current_args()[0]])
 
     @property
     def categories(self):
@@ -288,6 +308,10 @@ class TaskioProgram(object):
     def name(self):
         return self._name
 
+    @name.setter
+    def name(self, name):
+        self._name = name
+
     @property
     def namespace(self):
         return self._namespace
@@ -295,6 +319,14 @@ class TaskioProgram(object):
     @property
     def parser(self):
         return self._parser
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, version):
+        self._version = version
 
     def has_category(self, name):
         if name in self.categories:
@@ -345,48 +377,17 @@ class TaskioProgram(object):
                     return category_command
         return None
 
-    def load(self):
-        if "commands" in self.conf:
-            for command_conf in self.conf['commands']:
-                try:
-                    logger.debug(
-                        "Loading commands from module {}.".format(command_conf)
-                    )
-                    command_reference = get_from_string(command_conf)
-                    if isinstance(command_reference, list):
-                        for command in get_from_string(command_conf):
-                            command.load(self)
-                except ModuleNotFoundError as mnfe:
-                    print("Taskio FATAL ERROR:\n  Module \"{}\" not found.\n  "
-                          "Please add it to the PYTHONPATH.".format(
-                        command_conf))
-                    sys.exit(sysexits.EX_FATAL_ERROR)
-            self._name = os.path.split(sys.argv[0])[1]
-            if "program" in self.conf:
-                if "name" in self.conf['program']:
-                    self._name = resolve_name(self.conf['program']['name'])
-                if "version" in self.conf['program']:
-                    self._version = resolve_version(
-                        self.conf['program']['version']
-                    )
-            self._command_index = 0
-            self._name = os.path.split(sys.argv[0])[1]
-            self._args = sys.argv[1:]
-            if len(self._args) == 0:
-                # As command is positional let's add a default if none.
-                self._args.append("help")
-            self._parser = TaskioArgumentParser(
-                prog=self.name,
-                add_help=False)
-            self.parser.add_argument("-h", "--help", default=argparse.SUPPRESS)
-            self.parser.add_argument("command", help="Command to executed")
-            self._namespace = self.parser.parse_args([self.current_args()[0]])
-
     def run(self, command):
         try:
             command.run(self.current_args())
         except TaskioArgumentError as error:
-            print(error.help)
+            # Get all taskio
+            print("***********")
+            print(error.reason)
+            print("***********")
+            if error.show_usage:
+                print(error.source.usage)
+                print(error.source.help)
             sys.exit(sysexits.EX_MISUSE)
 
     def current_args(self):

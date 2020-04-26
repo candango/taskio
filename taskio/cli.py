@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from . import process
 from .model import TaskioProgram
 from cartola import sysexits
 import logging
@@ -25,19 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 def run(conf, **kwargs):
-    root = kwargs.get("root", "taskio")
-    if conf is None:
-        print("Taskio FATAL ERROR:\n Please provide a configuration to the "
-              "command.")
-        sys.exit(sysexits.EX_FATAL_ERROR)
-
-    if root is None or root not in conf:
-        print("Taskio FATAL ERROR:\n  Please add a root to the command "
-              "configuration")
-        sys.exit(sysexits.EX_FATAL_ERROR)
-
-    program = TaskioProgram(conf=conf, root=root)
-    program.load()
+    loader = process.TaskioLoader(conf, **kwargs)
+    program = loader.load_program()
     category = program.what_category()
     if category is not None:
         command = program.what_to_run(category)
