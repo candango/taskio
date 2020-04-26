@@ -18,15 +18,17 @@ import argparse
 from gettext import gettext as _
 
 
-class TaskioArgumentError(Exception):
-    """ An error thrown while parsing arguments with TaskioArgumentParser.
+class TaskioException(Exception):
+    """ Base exception to be thrown by any part of the code and be displayed by
+    the current runner.
     """
 
     def __init__(self, *args, **kwargs):
-        super(TaskioArgumentError, self).__init__(*args, **kwargs)
+        super(TaskioException, self).__init__(*args, **kwargs)
         self._help = kwargs.get("help", None)
         self._source = kwargs.get("source", None)
         self._reason = kwargs.get("reason", None)
+        self._show_usage = False
 
     @property
     def help(self):
@@ -51,6 +53,20 @@ class TaskioArgumentError(Exception):
     @reason.setter
     def reason(self, reason):
         self._reason = reason
+
+    @property
+    def show_usage(self):
+        return self._show_usage
+
+    @show_usage.setter
+    def show_usage(self, show_usage):
+        self._show_usage = show_usage
+
+
+class TaskioArgumentError(TaskioException):
+    """ An error thrown while parsing arguments with TaskioArgumentParser.
+    """
+    pass
 
 
 class TaskioArgumentParser(argparse.ArgumentParser):
