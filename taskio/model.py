@@ -18,7 +18,6 @@ from .argparse_ext import TaskioArgumentError, TaskioArgumentParser
 import argparse
 from cartola import sysexits
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +117,7 @@ class TaskioCommand(object):
         self._category_name = None
         self._command_help = None
         self._level = 0
+        self._exit_code = sysexits.EX_OK
 
         self.name = name
         self.description = description
@@ -172,6 +172,24 @@ class TaskioCommand(object):
         return "{}".format(self.name)
 
     @property
+    def exit_code(self):
+        return self._exit_code
+
+    def get_error_message(self, error):
+        error_message = ""
+        for task in self.tasks:
+            if task.is_my_error(error):
+                error_message = "%s%s" % (
+                    error_message,
+                    task.get_error_message(error)
+                )
+        if error_message == "":
+            error_message = error.help
+        if self._exit_code == 0:
+            self._exit_code = sysexits.EX_CATCHALL
+        return error_message
+
+    @property
     def level(self):
         return self._level
 
@@ -222,8 +240,6 @@ class TaskioCommand(object):
         return command in self.commands
 
     def run(self, args):
-        print(args)
-        print(self.has_sub_commands)
         subcommands_resolved = False
         if self.has_sub_commands:
             if len(args) == 1:
@@ -256,12 +272,7 @@ class TaskioCommand(object):
                 task.run(namespace)
         except TaskioArgumentError as error:
             error.source = self
-            command_help = ""
-            error_message = task.get_error_message(cmd_parser, error)
-            for task in self.tasks:
-                error_message = task.get_error_message(cmd_parser, error)
-                if error_message:
-                    command_help += "\n".join([command_help, error_message])
+            command_help = "An argument error occurred:\n  %s" % error
             error.help = command_help
             raise error
 
@@ -369,26 +380,11 @@ class TaskioProgram(object):
         """ Check if the given command was registered. In another words if it
         exists.
         """
-        print(self.namespace)
-
         for name, category in self.categories.items():
             for category_command in category.commands:
                 if category_command.match(self.namespace.command):
                     return category_command
         return None
-
-    def run(self, command):
-        try:
-            command.run(self.current_args())
-        except TaskioArgumentError as error:
-            # Get all taskio
-            print("***********")
-            print(error.reason)
-            print("***********")
-            if error.show_usage:
-                print(error.source.usage)
-                print(error.source.help)
-            sys.exit(sysexits.EX_MISUSE)
 
     def current_args(self):
         return self._args[self._command_index:]
@@ -456,10 +452,13 @@ class TaskioTask(object):
         """
         return None
 
-    def get_error_message(self, parser, error):
+    def get_error_message(self, error):
         if hasattr(error, "message"):
             return error.message
         return str(error)
+
+    def is_my_error(self, error):
+        return False
 
     def run(self, namespace=None):
         """
