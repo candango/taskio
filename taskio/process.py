@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import argparse_ext
+from .argparse_ext import TaskioArgumentError
 from .config import resolve_name, resolve_version
-from .model import TaskioProgram
+from .model import TaskioCommand, TaskioProgram
 from cartola import sysexits
 from cartola.config import get_from_string
 import logging
@@ -31,6 +31,7 @@ class TaskioLoader(object):
     def __init__(self, conf, **kwargs):
         self._conf = conf
         self._root = kwargs.get("root", "taskio")
+        self._program = None
         if self._conf is None:
             print(
                 "Taskio FATAL ERROR:\n Please provide a configuration to the "
@@ -42,33 +43,45 @@ class TaskioLoader(object):
                   "configuration")
             sys.exit(sysexits.EX_FATAL_ERROR)
 
-    def load_program(self):
-        program = TaskioProgram(conf=self._conf, root=self._root)
-        if "commands" in self.conf:
-            for command_conf in self.conf['commands']:
-                try:
-                    logger.debug(
-                        "Loading commands from module {}.".format(command_conf)
-                    )
-                    command_reference = get_from_string(command_conf)
-                    if isinstance(command_reference, list):
-                        for command in get_from_string(command_conf):
-                            command.load(program)
-                except ModuleNotFoundError as mnfe:
-                    print("Taskio FATAL ERROR:\n  Module \"{}\" not found.\n  "
-                          "Please add it to the PYTHONPATH.".format(
-                        command_conf))
-                    sys.exit(sysexits.EX_FATAL_ERROR)
-            program.name = os.path.split(sys.argv[0])[1]
-            if "program" in self.conf:
-                if "name" in self.conf['program']:
-                    program.name = resolve_name(self.conf['program']['name'])
-                if "version" in self.conf['program']:
-                    program.version = resolve_version(
-                        self.conf['program']['version']
-                    )
-            program.args = sys.argv[1:]
-        return program
+    def load(self):
+        if self._program is None:
+            self._program = TaskioProgram(conf=self._conf, root=self._root)
+            if "commands" in self.conf:
+                for command_conf in self.conf['commands']:
+                    try:
+                        logger.debug(
+                            "Loading commands from module {}.".format(
+                                command_conf
+                            )
+                        )
+                        command_reference = get_from_string(command_conf)
+                        if isinstance(command_reference, list):
+                            for command in get_from_string(command_conf):
+                                command.load(self._program)
+                        else:
+                            command_reference.load(self._program)
+                    except ModuleNotFoundError as mnfe:
+                        print("Taskio FATAL ERROR:\n  Module \"{}\" not "
+                              "found.\n  Please add it to the "
+                              "PYTHONPATH.".format(command_conf))
+                        sys.exit(sysexits.EX_FATAL_ERROR)
+                self._program.name = os.path.split(sys.argv[0])[1]
+                if "program" in self.conf:
+                    if "name" in self.conf['program']:
+                        self._program.name = resolve_name(
+                            self.conf['program']['name']
+                        )
+                    if "version" in self.conf['program']:
+                        self._program.version = resolve_version(
+                            self.conf['program']['version']
+                        )
+                self._program.args = sys.argv[1:]
+        else:
+            logger.debug("The program was already loaded")
+
+    @property
+    def program(self):
+        return self._program
 
     @property
     def conf(self):
@@ -77,6 +90,30 @@ class TaskioLoader(object):
 
 class TaskioRunner(object):
 
-    def run(loader):
-        pass
+    def __init__(self, loader):
+        self._loader = loader
 
+    def run(self):
+        category = self._loader.program.what_category()
+        if category is not None:
+            command = self._loader.program.what_to_run(category)
+            if command is not None:
+                try:
+                    command.run(self._loader.program.current_args())
+                except TaskioArgumentError as error:
+                    if error.source is not None:
+                        if isinstance(error.source, TaskioCommand):
+                            error_message = error.source.get_error_message(
+                                error)
+                            print(error_message)
+                            sys.exit(error.source.exit_code)
+                    # Get all taskio
+                    print("***********")
+                    print(error.help)
+                    print("***********")
+                    if error.show_usage:
+                        print(error.source.usage)
+                        print(error.source.help)
+                    sys.exit(sysexits.EX_MISUSE)
+        self._loader.program.show_command_line_usage()
+        sys.exit()

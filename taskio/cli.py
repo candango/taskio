@@ -16,10 +16,7 @@
 # limitations under the License.
 
 from . import process
-from .model import TaskioProgram
-from cartola import sysexits
 import logging
-import sys
 
 categories = {}
 logger = logging.getLogger(__name__)
@@ -27,12 +24,6 @@ logger = logging.getLogger(__name__)
 
 def run(conf, **kwargs):
     loader = process.TaskioLoader(conf, **kwargs)
-    program = loader.load_program()
-    category = program.what_category()
-    if category is not None:
-        command = program.what_to_run(category)
-        if command is not None:
-            program.run(command)
-
-    program.show_command_line_usage()
-    sys.exit()
+    loader.load()
+    runner = process.TaskioRunner(loader)
+    runner.run()
