@@ -3,4 +3,4 @@ taskio:
     name: basic
     version: 0.0.1
   commands:
-    - doit.commands.list
+    - basic.commands.list

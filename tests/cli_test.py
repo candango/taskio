@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2020 Flavio Garcia
+# Copyright 2019-2022 Flávio Gonçalves Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,11 +23,9 @@ import os
 
 import sys
 # Mocking sys: https://bit.ly/2q243Tg
-try:
-    # python 3.4+ should use builtin unittest.mock not mock package
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
+
+# python 3.4+ should use builtin unittest.mock not mock package
+from unittest.mock import patch
 
 
 class ProgramConfigTestCase(unittest.TestCase):

@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2020 Flavio Garcia
+# Copyright 2019-2022 Flávio Gonçalves Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+
 from .argparse_ext import TaskioArgumentError, TaskioArgumentParser
 import argparse
 from cartola import sysexits
+
 import logging
+from typing import Callable
+
+
 
 logger = logging.getLogger(__name__)
+
+_TASKIO_NO_CATEGORY = "__taskio_no_category__"
+
+test_variable = "aaa"
+
+
+
 
 
 class TaskioCategory(object):
@@ -28,6 +41,7 @@ class TaskioCategory(object):
         self._program = program
         self._name = None
         self._commands = []
+        self._resolved = False
         self.name = name
 
     @property
@@ -53,9 +67,19 @@ class TaskioCategory(object):
 
     @property
     def level(self):
-        if self.name == self.program._TASKIO_NO_CATEGORY_:
+        if self.resolved:
+            return 0
+        if self.name == _TASKIO_NO_CATEGORY:
             return 0
         return 1
+
+    @property
+    def resolved(self):
+        return self._resolved
+
+    @resolved.setter
+    def resolved(self, value):
+        self._resolved = value
 
     def has_category(self, name):
         return self.program.has_category(name)
@@ -118,6 +142,7 @@ class TaskioCommand(object):
         self._command_help = None
         self._level = 0
         self._exit_code = sysexits.EX_OK
+        self._context = {}
 
         self.name = name
         self.description = description
@@ -133,9 +158,10 @@ class TaskioCommand(object):
         if tasks is not None:
             if isinstance(tasks, list):
                 for task in tasks:
-                    self.tasks.append(task(self))
+                    self.append_task(task)
             else:
-                self.tasks.append(tasks(self))
+                self.append_task(tasks)
+
     @property
     def name(self):
         return self._name
@@ -178,15 +204,16 @@ class TaskioCommand(object):
     def get_error_message(self, error):
         error_message = ""
         for task in self.tasks:
-            if task.is_my_error(error):
-                error_message = "%s%s" % (
-                    error_message,
-                    task.get_error_message(error)
-                )
-        if error_message == "":
-            error_message = error.help
+            if not isinstance(task, tuple):
+                if task.is_my_error(error):
+                    error_message = "%s%s" % (
+                        error_message,
+                        task.get_error_message(error)
+                    )
         if self._exit_code == 0:
             self._exit_code = sysexits.EX_CATCHALL
+        # if not error_message:
+        #     return self.help
         return error_message
 
     @property
@@ -206,6 +233,10 @@ class TaskioCommand(object):
         self._parent = parent
 
     @property
+    def context(self):
+        return self._context
+
+    @property
     def program(self):
         return self._program
 
@@ -223,12 +254,19 @@ class TaskioCommand(object):
 
     @property
     def usage(self):
+
         usage = "%s" % self.name
         return usage
 
     @property
     def has_sub_commands(self):
         return len(self.sub_commands) > 0
+
+    def append_task(self, task):
+        if isinstance(task, Callable):
+            self.tasks.append((task, self))
+            return
+        self.tasks.append(task(self))
 
     def load(self, program):
         self._program = program
@@ -241,6 +279,7 @@ class TaskioCommand(object):
 
     def run(self, args):
         subcommands_resolved = False
+        print(self.name, self.has_sub_commands)
         if self.has_sub_commands:
             if len(args) == 1:
                 error = TaskioArgumentError()
@@ -254,9 +293,7 @@ class TaskioCommand(object):
                     subcommand.run(unresolved_args)
                     break
         else:
-            self.run_tasks(args)
-        exit(0)
-        if not self.has_sub_commands:
+            print(self.tasks)
             self.run_tasks(args)
             exit(0)
 
@@ -266,9 +303,18 @@ class TaskioCommand(object):
         cmd_parser.add_argument("command", help="Command to executed")
         try:
             for task in self.tasks:
-                task.add_arguments(cmd_parser)
+                if not isinstance(task, tuple):
+                    task.add_arguments(cmd_parser)
             namespace = cmd_parser.parse_args(args)
             for task in self.tasks:
+                if isinstance(task, tuple):
+                    try:
+                        # TODO: need to inject those variabled better
+                        self._pipe = task[0](*[task[1], namespace])
+                    except TypeError:
+                        # This will default to a lambda with only one parameter
+                        self._pipe = task[0]((task[1], namespace))
+                    continue
                 task.run(namespace)
         except TaskioArgumentError as error:
             error.source = self
@@ -289,12 +335,15 @@ class TaskioProgram(object):
         self._version = None
         self._root = kwargs.get("root", "taskio")
         self._categories = dict()
-        self._TASKIO_NO_CATEGORY_ = "__taskio_no_category__"
-        self.add_category(self._TASKIO_NO_CATEGORY_)
+        self.add_category(_TASKIO_NO_CATEGORY)
 
     @property
     def args(self):
         return self._args
+
+    @property
+    def no_category(self):
+        return self.get_category(_TASKIO_NO_CATEGORY)
 
     @args.setter
     def args(self, args):
@@ -357,23 +406,20 @@ class TaskioProgram(object):
 
     def resolve_category_name(self, name):
         if name is None or name.strip() == "":
-            return self._TASKIO_NO_CATEGORY_
+            return _TASKIO_NO_CATEGORY
         return name.strip()
 
-    def what_category(self):
-        # First check if command is in _TASKIO_NO_CATEGORY_
-        for category_command in self.get_category(
-                self._TASKIO_NO_CATEGORY_).commands:
+    def what_category(self) -> TaskioCategory | None:
+        # First check if command is in _TASKIO_NO_CATEGORY
+        for category_command in self.no_category.commands:
             if category_command.match(self._namespace.command):
-                return self.get_category(self._TASKIO_NO_CATEGORY_)
+                return self.no_category
 
         # If not found in commands set to next argument index
         self._command_index += 1
-
         for name, category in self.categories.items():
             if name == self._namespace.command:
                 return category
-
         return None
 
     def get_existing_command(self):
@@ -392,16 +438,23 @@ class TaskioProgram(object):
     def what_to_run(self, category):
         try:
             what_to_run = category.get_existing_command(self.current_args()[0])
+            what_to_run.resolved = True
             return what_to_run
         except IndexError:
             return None
 
-    def show_command_line_usage(self, usage=False):
+    def show_command_line_usage(self, **kwargs):
         """ Show the command line help
         """
+        usage = kwargs.get('usage', False)
+        what_to_run = kwargs.get('what_to_run')
         print(self.get_command_header(usage))
-        for name, category in self.categories.items():
-            print(category.help)
+
+        if what_to_run:
+            print(what_to_run.help)
+        else:
+            for name, category in self.categories.items():
+                print(category.help)
 
     def get_command_header(self, usage=False):
         """ Return the command line header
@@ -412,8 +465,8 @@ class TaskioProgram(object):
         :return: The command header
         """
         header_message = self.name
-        if self._version is not None:
-            header_message = "%s %s" % (header_message,self._version)
+        if self._version:
+            header_message = "%s %s" % (header_message, self._version)
         if usage:
             test = """{% if usage %}
 Usage: {{ parser.prog }} [-h] {%raw usage_message %}

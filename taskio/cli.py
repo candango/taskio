@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2020 Flavio Garcia
+# Copyright 2019-2022 Flávio Gonçalves Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,11 +18,14 @@
 from . import process
 import logging
 
-categories = {}
+
+context_settings = {}
 logger = logging.getLogger(__name__)
 
 
 def run(conf, **kwargs):
+    print(conf)
+    exit()
     loader = process.TaskioLoader(conf, **kwargs)
     loader.load()
     runner = process.TaskioRunner(loader)
