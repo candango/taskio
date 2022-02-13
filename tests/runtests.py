@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
 # Copyright 2019-2022 Flávio Gonçalves Garcia
@@ -14,19 +13,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import (absolute_import, division, print_function,
+                        with_statement)
 
-from . import process
-import logging
-
-
-context_settings = {}
-logger = logging.getLogger(__name__)
+import unittest
+from . import cli_test, config_test
 
 
-def run(conf, **kwargs):
-    print(conf)
-    exit()
-    loader = process.TaskioLoader(conf, **kwargs)
-    loader.load()
-    runner = process.TaskioRunner(loader)
-    runner.run()
+def suite():
+    testLoader = unittest.TestLoader()
+    alltests = unittest.TestSuite()
+    alltests.addTests(testLoader.loadTestsFromModule(cli_test))
+    alltests.addTests(testLoader.loadTestsFromModule(config_test))
+    return alltests
+
+
+if __name__ == "__main__":
+    runner = unittest.TextTestRunner(verbosity=3)
+    result = runner.run(suite())
+    if not result.wasSuccessful():
+        exit(2)

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 #
 # Copyright 2019-2022 Flávio Gonçalves Garcia
@@ -15,18 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from . import process
+from __future__ import (absolute_import, division, print_function,
+                        with_statement)
+
+import unittest
 import logging
+import os
+
+import sys
+# Mocking sys: https://bit.ly/2q243Tg
+
+# python 3.4+ should use builtin unittest.mock not mock package
+from unittest.mock import patch
 
 
-context_settings = {}
-logger = logging.getLogger(__name__)
+class ProgramConfigTestCase(unittest.TestCase):
+    """ Case to test get_command_header
+    """
 
-
-def run(conf, **kwargs):
-    print(conf)
-    exit()
-    loader = process.TaskioLoader(conf, **kwargs)
-    loader.load()
-    runner = process.TaskioRunner(loader)
-    runner.run()
+    def test_header_message(self):
+        """  """
+        self.assertTrue(False)

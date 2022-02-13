@@ -6,4 +6,4 @@ A Python library for command-line argument processing.
 
 **Apache License V2.0**
 
-Copyright © 2015-2020 Flavio Garcia
+Copyright © 2019-2022 Flávio Gonçalves Garcia
