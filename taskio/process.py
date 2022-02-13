@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
-# Copyright 2019-2020 Flavio Garcia
+# Copyright 2019-2022 Flávio Gonçalves Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,31 +19,55 @@ from .config import resolve_name, resolve_version
 from .model import TaskioCommand, TaskioProgram
 from cartola import sysexits
 from cartola.config import get_from_string
+import importlib
 import logging
 import os
 import sys
 
+
 logger = logging.getLogger(__name__)
+
+
+class TaskioContext(object):
+
+    def __init__(self, conf, **kwargs):
+        self._conf = conf
 
 
 class TaskioLoader(object):
 
-    def __init__(self, conf, **kwargs):
+    def __init__(self, conf, program=None, **kwargs):
         self._conf = conf
         self._root = kwargs.get("root", "taskio")
-        self._program = None
-        if self._conf is None:
+        self._program = program
+        self._version = None
+        self._name = None
+        self._sources = []
+        if not self._conf:
             print(
                 "Taskio FATAL ERROR:\n Please provide a configuration to the "
                 "command.")
             sys.exit(sysexits.EX_FATAL_ERROR)
-
-        if self._root is None or self._root not in self._conf:
+        if not self._root or self._root not in self._conf:
             print("Taskio FATAL ERROR:\n  Please add a root to the command "
                   "configuration")
             sys.exit(sysexits.EX_FATAL_ERROR)
 
     def load(self):
+        if "program" in self.conf:
+            if "name" in self.conf['program']:
+                self.conf['program']['name'] = resolve_name(
+                    self.conf['program']['name']
+                )
+            if "version" in self.conf['program']:
+                self.conf['program']['version'] = resolve_version(
+                    self.conf['program']['version']
+                )
+
+        if "sources" in self.conf:
+            for source in self.conf['sources']:
+                self._sources.append(importlib.import_module(source))
+
         if self._program is None:
             self._program = TaskioProgram(conf=self._conf, root=self._root)
             if "commands" in self.conf:
@@ -84,36 +108,30 @@ class TaskioLoader(object):
         return self._program
 
     @property
+    def name(self):
+        if "program" in self.conf and "name" in self.conf['program']:
+            return self.conf['program']['name']
+        return None
+
+    @property
+    def version(self):
+        if "program" in self.conf and "version" in self.conf['program']:
+            return self.conf['program']['version']
+        return None
+
+    @property
+    def full_name(self):
+        if self.name:
+            name = self.name
+            if self.version:
+                return "%s %s" % (name, self.version)
+            return name
+        return None
+
+    @property
     def conf(self):
         return self._conf[self._root]
 
-
-class TaskioRunner(object):
-
-    def __init__(self, loader):
-        self._loader = loader
-
-    def run(self):
-        category = self._loader.program.what_category()
-        if category is not None:
-            command = self._loader.program.what_to_run(category)
-            if command is not None:
-                try:
-                    command.run(self._loader.program.current_args())
-                except TaskioArgumentError as error:
-                    if error.source is not None:
-                        if isinstance(error.source, TaskioCommand):
-                            error_message = error.source.get_error_message(
-                                error)
-                            print(error_message)
-                            sys.exit(error.source.exit_code)
-                    # Get all taskio
-                    print("***********")
-                    print(error.help)
-                    print("***********")
-                    if error.show_usage:
-                        print(error.source.usage)
-                        print(error.source.help)
-                    sys.exit(sysexits.EX_MISUSE)
-        self._loader.program.show_command_line_usage()
-        sys.exit()
+    @property
+    def sources(self):
+        return self._sources
