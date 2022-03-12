@@ -1,5 +1,4 @@
 from . import tasks
-from taskio.model import TaskioCommand
 import taskio
 from taskio import core
 import click
@@ -28,11 +27,12 @@ def another(ctx):
 
 
 @taskio.group(name="g1", short_help="A group level 1")
-def groupl1():
-    print("Group level 1 stuff")
+@pass_context
+def groupl1(ctx):
+    pass
 
 
-@groupl1.group(name="g2", cls=core.TaskioGroup, short_help="A group level 2")
+@groupl1.group(name="g2", short_help="A group level 2")
 def groupl2():
     print("Group level 2 stuff")
 

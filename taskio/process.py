@@ -16,7 +16,6 @@
 
 from .argparse_ext import TaskioArgumentError
 from .config import resolve_name, resolve_version
-from .model import TaskioCommand, TaskioProgram
 from cartola import sysexits
 from cartola.config import get_from_string
 import importlib
@@ -67,41 +66,6 @@ class TaskioLoader(object):
         if "sources" in self.conf:
             for source in self.conf['sources']:
                 self._sources.append(importlib.import_module(source))
-
-        if self._program is None:
-            self._program = TaskioProgram(conf=self._conf, root=self._root)
-            if "commands" in self.conf:
-                for command_conf in self.conf['commands']:
-                    try:
-                        logger.debug(
-                            "Loading commands from module {}.".format(
-                                command_conf
-                            )
-                        )
-                        command_reference = get_from_string(command_conf)
-                        if isinstance(command_reference, list):
-                            for command in get_from_string(command_conf):
-                                command.load(self._program)
-                        else:
-                            command_reference.load(self._program)
-                    except ModuleNotFoundError as mnfe:
-                        print("Taskio FATAL ERROR:\n  Module \"{}\" not "
-                              "found.\n  Please add it to the "
-                              "PYTHONPATH.".format(command_conf))
-                        sys.exit(sysexits.EX_FATAL_ERROR)
-                self._program.name = os.path.split(sys.argv[0])[1]
-                if "program" in self.conf:
-                    if "name" in self.conf['program']:
-                        self._program.name = resolve_name(
-                            self.conf['program']['name']
-                        )
-                    if "version" in self.conf['program']:
-                        self._program.version = resolve_version(
-                            self.conf['program']['version']
-                        )
-                self._program.args = sys.argv[1:]
-        else:
-            logger.debug("The program was already loaded")
 
     @property
     def program(self):

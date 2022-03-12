@@ -35,8 +35,7 @@ pass_context = click.make_pass_decorator(core.TaskioContext, ensure=True)
 @taskio.root(taskio_conf=load_yaml_file(DOIT_CONFIG_FILE))
 @pass_context
 def doit_cli(ctx):
-    print(ctx)
-    print("aaaa")
+    pass
 
 
 if DOIT_ROOT not in sys.path:
