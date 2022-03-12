@@ -15,6 +15,7 @@ import click
 from cartola.config import load_yaml_file
 import logging
 import os
+import taskio
 from taskio import core
 import sys
 
@@ -31,8 +32,7 @@ DOIT_CONFIG_FILE = os.path.join(DOIT_ROOT, "doit", "doit.yml")
 pass_context = click.make_pass_decorator(core.TaskioContext, ensure=True)
 
 
-@click.command(cls=core.TaskioGroup, taskio_conf=load_yaml_file(
-    DOIT_CONFIG_FILE))
+@taskio.root(taskio_conf=load_yaml_file(DOIT_CONFIG_FILE))
 @pass_context
 def doit_cli(ctx):
     print(ctx)

@@ -16,12 +16,67 @@
 
 from . import process
 import click
-from click.core import Command, Group
+from click.core import Command, Context, Group, HelpFormatter
+from rich.console import Console
 import os
-from typing import Any, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Sequence, Type, Union
+import io
+import sys
 
 
-class TaskioCommand(click.MultiCommand):
+__multi_command__ = None
+
+
+class TaskioHelpFormatter(HelpFormatter):
+
+    def __init__(
+            self,
+            indent_increment: int = 2,
+            width: Optional[int] = None,
+            max_width: Optional[int] = None,
+    ) -> None:
+        super().__init__(indent_increment, width, max_width)
+        print("bfasdfasdfasdfasdf asdf asfasdfaaa")
+
+    def write_usage(
+        self, prog: str, args: str = "", prefix: Optional[str] = None
+    ) -> None:
+        print("AAAAA MULEKE")
+        super().write_usage(prog, args, prefix)
+
+
+class TaskioTestContext(Context):
+
+    def __init__(
+            self,
+            command: Command,
+            parent: Optional[Context] = None,
+            info_name: Optional[str] = None,
+            obj: Optional[Any] = None,
+            auto_envvar_prefix: Optional[str] = None,
+            default_map: Optional[Dict[str, Any]] = None,
+            terminal_width: Optional[int] = None,
+            max_content_width: Optional[int] = None,
+            resilient_parsing: bool = False,
+            allow_extra_args: Optional[bool] = None,
+            allow_interspersed_args: Optional[bool] = None,
+            ignore_unknown_options: Optional[bool] = None,
+            help_option_names: Optional[List[str]] = None,
+            token_normalize_func: Optional[Callable[[str], str]] = None,
+            color: Optional[bool] = None,
+            show_default: Optional[bool] = None,
+    ) -> None:
+        super().__init__(command, parent, info_name, obj, auto_envvar_prefix,
+                         default_map, terminal_width, max_content_width,
+                         resilient_parsing, allow_extra_args,
+                         allow_interspersed_args, ignore_unknown_options,
+                         help_option_names, token_normalize_func, color,
+                         show_default)
+        self.formatter_class = TaskioHelpFormatter
+        print("mooooo")
+
+
+class TaskioMultiCommand(click.MultiCommand):
 
     def __init__(
             self, name=None, invoke_without_command: bool = False,
@@ -31,24 +86,18 @@ class TaskioCommand(click.MultiCommand):
         self.conf = {}
         if "taskio_conf" in attrs:
             self.conf = attrs.pop("taskio_conf")
+            sys.modules[__name__].__multi_command__ = self
         self.loader = process.TaskioLoader(self.conf, self)
         self.loader.load()
-        if self.loader.full_name:
-            name = self.loader.full_name
+        if "taskio_conf" in attrs:
+            if self.loader.full_name:
+                name = self.loader.full_name
         super().__init__(name, invoke_without_command, no_args_is_help,
                          subcommand_metavar, chain, result_callback, **attrs)
-        # print("Name: %s" % name)
-        # print("Invoke without command: %s" % invoke_without_command)
-        # print("No args is help: %s" % no_args_is_help)
-        # print("Subcommand metavar: %s" % subcommand_metavar)
-        # print("Chain: %s" % chain)
-        # print("Result callback: %s" % result_callback)
-        # print("kwargs: %s" % attrs)
+        self.context_class = TaskioTestContext
+        print("buga")
 
     def list_commands(self, ctx: Any) -> List[str]:
-        # for name, val in foo.__dict__.iteritems():
-        #     if callable(val):  # check if callable (normally functions)
-        #         val()
         rv = []
         groups = []
         for source in self.loader.sources:
@@ -61,7 +110,6 @@ class TaskioCommand(click.MultiCommand):
             for key, item in group.commands.items():
                 if item.name in rv:
                     rv.remove(item.name)
-                    print(item.name)
         rv.sort()
         return rv
 
@@ -72,14 +120,85 @@ class TaskioCommand(click.MultiCommand):
                     return val
         return
 
+    def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
+        pieces = self.collect_usage_pieces(ctx)
+        formatter.write(self.loader.full_name)
+        formatter.write("\n")
+        formatter.write_usage(self.loader.name, " ".join(pieces))
+
+    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
+        """
+        See: https://stackoverflow.com/a/62437850/2887989
+        :param ctx:
+        :param formatter:
+        :return:
+        """
+        sio = io.StringIO()
+        console = Console(file=sio, force_terminal=True)
+        console.print("Hello, [bold magenta]World[/bold magenta]!")
+        formatter.write(sio.getvalue())
+
+
+class TaskioGroup(Group):
+
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        commands: Optional[Union[Dict[str, Command],
+                                 Sequence[Command]]] = None,
+        **attrs: Any,
+    ) -> None:
+        super().__init__(name, commands, **attrs)
+        self._multi_command = sys.modules[__name__].__multi_command__
+
+    def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
+        pieces = self.collect_usage_pieces(ctx)
+        formatter.write(self._multi_command.loader.full_name)
+        formatter.write("\n")
+        formatter.write_usage(self._multi_command.loader.name,
+                              " ".join(pieces))
+
+    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
+        """
+        See: https://stackoverflow.com/a/62437850/2887989
+        :param ctx:
+        :param formatter:
+        :return:
+        """
+        sio = io.StringIO()
+        console = Console(file=sio, force_terminal=True)
+        console.print("Hello, [bold magenta]World[/bold magenta]!")
+        formatter.write(sio.getvalue())
+
+
+class TaskioCommand(Command):
+
+    def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
+        pieces = self.collect_usage_pieces(ctx)
+        formatter.write(self.loader.full_name)
+        formatter.write("\n")
+        formatter.write_usage(self.loader.name, " ".join(pieces))
+
+    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
+        """
+        See: https://stackoverflow.com/a/62437850/2887989
+        :param ctx:
+        :param formatter:
+        :return:
+        """
+        sio = io.StringIO()
+        console = Console(file=sio, force_terminal=True)
+        console.print("Hello, [bold magenta]World[/bold magenta]!")
+        formatter.write(sio.getvalue())
+
 
 class TaskioContext(object):
 
     def __init__(self, **kwargs):
         self.current = os.getcwd()
-        print("buuuu")
-        print(kwargs)
 
 
 def get_context():
     return click.make_pass_decorator(TaskioContext, ensure=True)
+
+
