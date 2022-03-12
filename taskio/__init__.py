@@ -31,3 +31,10 @@ def get_author():
 def get_author_email():
     return __author__.split(" <")[1][:-1]
 
+
+try:
+    from .core import TaskioMultiCommand as MultiCommand
+    from .decorators import group as group
+    from .decorators import root as root
+except:
+    pass

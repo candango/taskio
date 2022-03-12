@@ -4,3 +4,5 @@ taskio:
     version: doit.__version__
   commands:
     - doit.commands._list
+  sources:
+    - doit.commands
