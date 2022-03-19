@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__author__ = "Flavio Garcia <piraz@candango.org>"
+__author__ = "Flávio Gonçalves Garcia <piraz@candango.org>"
 __description__ = "A Python library for command-line argument processing."
-__version__ = (0, 0, 1)
+__version__ = (0, 0, 2)
 __licence__ = "Apache License V2.0"
 
 
