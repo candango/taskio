@@ -51,6 +51,7 @@ setup(
     author_email=taskio.get_author_email(),
     maintainer=taskio.get_author(),
     maintainer_email=taskio.get_author_email(),
+    install_requires=resolve_requires("requirements/basic.txt"),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
