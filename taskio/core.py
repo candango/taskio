@@ -17,10 +17,8 @@
 from . import process
 import click
 from click.core import Command, Context, Group, HelpFormatter
-from rich.console import Console
 import os
-from typing import Any, Callable, Dict, List, Optional, Sequence, Type, Union
-import io
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import sys
 
 
@@ -182,5 +180,3 @@ class TaskioContext(object):
 
 def get_context():
     return click.make_pass_decorator(TaskioContext, ensure=True)
-
-

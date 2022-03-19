@@ -1,6 +1,5 @@
 from .core import TaskioCommand, TaskioMultiCommand, TaskioGroup
 from click.decorators import _make_command
-import types
 import typing as t
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
