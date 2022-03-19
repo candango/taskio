@@ -17,32 +17,12 @@
 from . import process
 import click
 from click.core import Command, Context, Group, HelpFormatter
-from rich.console import Console
 import os
-from typing import Any, Callable, Dict, List, Optional, Sequence, Type, Union
-import io
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import sys
 
 
 __multi_command__ = None
-
-
-class TaskioHelpFormatter(HelpFormatter):
-
-    def __init__(
-            self,
-            indent_increment: int = 2,
-            width: Optional[int] = None,
-            max_width: Optional[int] = None,
-    ) -> None:
-        super().__init__(indent_increment, width, max_width)
-        print("bfasdfasdfasdfasdf asdf asfasdfaaa")
-
-    def write_usage(
-        self, prog: str, args: str = "", prefix: Optional[str] = None
-    ) -> None:
-        print("AAAAA MULEKE")
-        super().write_usage(prog, args, prefix)
 
 
 class TaskioTestContext(Context):
@@ -72,8 +52,6 @@ class TaskioTestContext(Context):
                          allow_interspersed_args, ignore_unknown_options,
                          help_option_names, token_normalize_func, color,
                          show_default)
-        self.formatter_class = TaskioHelpFormatter
-        print("mooooo")
 
 
 class TaskioMultiCommand(click.MultiCommand):
@@ -95,7 +73,6 @@ class TaskioMultiCommand(click.MultiCommand):
         super().__init__(name, invoke_without_command, no_args_is_help,
                          subcommand_metavar, chain, result_callback, **attrs)
         self.context_class = TaskioTestContext
-        print("buga")
 
     def list_commands(self, ctx: Any) -> List[str]:
         rv = []
@@ -126,18 +103,6 @@ class TaskioMultiCommand(click.MultiCommand):
         formatter.write("\n")
         formatter.write_usage(self.loader.name, " ".join(pieces))
 
-    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
-        """
-        See: https://stackoverflow.com/a/62437850/2887989
-        :param ctx:
-        :param formatter:
-        :return:
-        """
-        sio = io.StringIO()
-        console = Console(file=sio, force_terminal=True)
-        console.print("Hello, [bold magenta]World[/bold magenta]!")
-        formatter.write(sio.getvalue())
-
 
 class TaskioGroup(Group):
 
@@ -155,20 +120,47 @@ class TaskioGroup(Group):
         pieces = self.collect_usage_pieces(ctx)
         formatter.write(self._multi_command.loader.full_name)
         formatter.write("\n")
-        formatter.write_usage(self._multi_command.loader.name,
-                              " ".join(pieces))
+        prog = "%s %s" % (self._multi_command.loader.name,
+                          self.resolve_params(ctx))
+        formatter.write_usage(prog, " ".join(pieces))
 
-    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
+    def resolve_params(self, ctx):
+        params = ""
+        current_context = ctx
+        while current_context:
+            if current_context.parent is not None:
+                params = " ".join([current_context.info_name, params])
+            current_context = current_context.parent
+        return params
+
+    def group(
+        self, *args: Any, **kwargs: Any
+    ) -> Callable[[Callable[..., Any]], "Group"]:
+        """A shortcut decorator for declaring and attaching a group to
+        the group. This takes the same arguments as :func:`group` and
+        immediately registers the created group with this group by
+        calling :meth:`add_command`.
+
+        To customize the group class used, set the :attr:`group_class`
+        attribute.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`group_class` attribute.
         """
-        See: https://stackoverflow.com/a/62437850/2887989
-        :param ctx:
-        :param formatter:
-        :return:
-        """
-        sio = io.StringIO()
-        console = Console(file=sio, force_terminal=True)
-        console.print("Hello, [bold magenta]World[/bold magenta]!")
-        formatter.write(sio.getvalue())
+        from .decorators import group
+
+        if self.group_class is not None and "cls" not in kwargs:
+            if self.group_class is type:
+                kwargs["cls"] = type(self)
+            else:
+                kwargs["cls"] = self.group_class
+
+        def decorator(f: Callable[..., Any]) -> "TaskioGroup":
+            cmd = group(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        return decorator
 
 
 class TaskioCommand(Command):
@@ -179,18 +171,6 @@ class TaskioCommand(Command):
         formatter.write("\n")
         formatter.write_usage(self.loader.name, " ".join(pieces))
 
-    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
-        """
-        See: https://stackoverflow.com/a/62437850/2887989
-        :param ctx:
-        :param formatter:
-        :return:
-        """
-        sio = io.StringIO()
-        console = Console(file=sio, force_terminal=True)
-        console.print("Hello, [bold magenta]World[/bold magenta]!")
-        formatter.write(sio.getvalue())
-
 
 class TaskioContext(object):
 
@@ -200,5 +180,3 @@ class TaskioContext(object):
 
 def get_context():
     return click.make_pass_decorator(TaskioContext, ensure=True)
-
-
