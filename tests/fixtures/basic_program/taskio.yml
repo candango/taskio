@@ -1,0 +1,6 @@
+taskio:
+  program:
+    name: basic
+    version: 0.0.1
+  commands:
+    - basic.commands.list

@@ -1,0 +1,6 @@
+taskio:
+  program:
+    name: basic.__program_name__
+    version: basic.__version__
+  commands:
+    - basic.commands._list
