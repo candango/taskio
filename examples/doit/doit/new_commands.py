@@ -14,9 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .cli import pass_context
 import click
 
 
-@click.group()
-def cli1():
+@click.command()
+@pass_context
+def cli1(ctx):
+    print(ctx.context.loader.sources)
     print("test")
