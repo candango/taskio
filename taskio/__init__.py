@@ -16,7 +16,7 @@
 
 __author__ = "Flávio Gonçalves Garcia <piraz@candango.org>"
 __description__ = "A Python library for command-line argument processing."
-__version__ = (0, 0, 3)
+__version__ = (0, 0, 4)
 __licence__ = "Apache License V2.0"
 
 
