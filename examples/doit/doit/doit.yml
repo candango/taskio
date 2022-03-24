@@ -6,3 +6,4 @@ taskio:
     - doit.commands._list
   sources:
     - doit.commands
+    - doit.new_commands

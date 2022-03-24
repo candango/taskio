@@ -25,7 +25,7 @@ import sys
 __multi_command__ = None
 
 
-class TaskioTestContext(Context):
+class TaskioContext(Context):
 
     def __init__(
             self,
@@ -52,6 +52,7 @@ class TaskioTestContext(Context):
                          allow_interspersed_args, ignore_unknown_options,
                          help_option_names, token_normalize_func, color,
                          show_default)
+        self.loader = None
 
 
 class TaskioMultiCommand(click.MultiCommand):
@@ -72,7 +73,38 @@ class TaskioMultiCommand(click.MultiCommand):
                 name = self.loader.full_name
         super().__init__(name, invoke_without_command, no_args_is_help,
                          subcommand_metavar, chain, result_callback, **attrs)
-        self.context_class = TaskioTestContext
+        self.context_class = TaskioContext
+
+    def make_context(
+        self,
+        info_name: Optional[str],
+        args: List[str],
+        parent: Optional[Context] = None,
+        **extra: Any,
+    ) -> Context:
+        """This function when given an info name and arguments will kick
+        off the parsing and create a new :class:`Context`.  It does not
+        invoke the actual command callback though.
+
+        To quickly customize the context class used without overriding
+        this method, set the :attr:`context_class` attribute.
+
+        :param info_name: the info name for this invocation.  Generally this
+                          is the most descriptive name for the script or
+                          command.  For the toplevel script it's usually
+                          the name of the script, for commands below it it's
+                          the name of the command.
+        :param args: the arguments to parse as list of strings.
+        :param parent: the parent context if available.
+        :param extra: extra keyword arguments forwarded to the context
+                      constructor.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`context_class` attribute.
+        """
+        ctx = super().make_context(info_name, args, parent, **extra)
+        ctx.loader = self.loader
+        return ctx
 
     def list_commands(self, ctx: Any) -> List[str]:
         rv = []
@@ -172,11 +204,11 @@ class TaskioCommand(Command):
         formatter.write_usage(self.loader.name, " ".join(pieces))
 
 
-class TaskioContext(object):
+class TaskioCliContext(object):
 
     def __init__(self, **kwargs):
-        self.current = os.getcwd()
+        self.context = click.get_current_context()
 
 
 def get_context():
-    return click.make_pass_decorator(TaskioContext, ensure=True)
+    return click.make_pass_decorator(TaskioCliContext, ensure=True)

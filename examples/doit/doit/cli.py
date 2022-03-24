@@ -29,7 +29,7 @@ DOIT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOIT_CONFIG_FILE = os.path.join(DOIT_ROOT, "doit", "doit.yml")
 
 
-pass_context = click.make_pass_decorator(core.TaskioContext, ensure=True)
+pass_context = click.make_pass_decorator(core.TaskioCliContext, ensure=True)
 
 
 @taskio.root(taskio_conf=load_yaml_file(DOIT_CONFIG_FILE))
