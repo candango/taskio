@@ -19,5 +19,6 @@ def get_version():
     return "0.1.1"
 
 
-__program_name__ = "doit(Example Program)"
+__program_name__ = "doit"
+__program_description__ = "Example Program"
 __version__ = get_version

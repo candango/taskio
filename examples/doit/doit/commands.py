@@ -1,6 +1,5 @@
-import taskio
-from taskio import core
 import click
+import taskio
 
 
 def task_function(cmd, namespace):
@@ -8,13 +7,13 @@ def task_function(cmd, namespace):
           cmd.context['a_value'])
 
 
-pass_context = click.make_pass_decorator(core.TaskioCliContext, ensure=True)
+pass_context = taskio.make_pass_decorator(taskio.CliContext, ensure=True)
 
 
-@click.command(short_help="Initializes a repo.")
+@taskio.command(short_help="Generates an uuid4 string")
 @click.argument("path", required=False, type=click.Path(resolve_path=True))
 @pass_context
-def init(ctx, path):
+def uuid(ctx):
     """Initializes a repository."""
     print(ctx)
 
@@ -22,6 +21,7 @@ def init(ctx, path):
 @click.command(short_help="Do another thing")
 @pass_context
 def another(ctx):
+    print(ctx)
     print("another")
 
 

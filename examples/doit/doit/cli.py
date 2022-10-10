@@ -11,12 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import click
 from cartola.config import load_yaml_file
 import logging
 import os
 import taskio
-from taskio import core
 import sys
 
 logger = logging.getLogger(__name__)
@@ -29,7 +27,7 @@ DOIT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOIT_CONFIG_FILE = os.path.join(DOIT_ROOT, "doit", "doit.yml")
 
 
-pass_context = click.make_pass_decorator(core.TaskioCliContext, ensure=True)
+pass_context = taskio.make_pass_decorator(taskio.CliContext, ensure=True)
 
 
 @taskio.root(taskio_conf=load_yaml_file(DOIT_CONFIG_FILE))
