@@ -14,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from click.core import Command
+from click.decorators import command as click_command
 from .core import TaskioCommand, TaskioMultiCommand, TaskioGroup
-from click.decorators import _make_command
 import typing as t
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -33,10 +34,10 @@ def group(name: t.Optional[str] = None,
 
 
 def command(
-    name: t.Optional[str] = None,
-    cls: t.Optional[t.Type[TaskioCommand]] = None,
+    name: t.Union[str, t.Callable[..., t.Any], None] = None,
+    cls: t.Optional[t.Type[Command]] = None,
     **attrs: t.Any,
-) -> t.Callable[[F], TaskioCommand]:
+) -> t.Union[Command, t.Callable[..., Command]]:
     r"""Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
@@ -46,6 +47,8 @@ def command(
     pass the intended name as the first argument.
 
     All keyword arguments are forwarded to the underlying command class.
+    For the ``params`` argument, any decorated params are appended to
+    the end of the list.
 
     Once decorated the function turns into a :class:`Command` instance
     that can be invoked as a command line utility or be attached to a
@@ -59,12 +62,7 @@ def command(
     if cls is None:
         cls = TaskioCommand
 
-    def decorator(f: t.Callable[..., t.Any]) -> TaskioCommand:
-        cmd = _make_command(f, name, attrs, cls)  # type: ignore
-        cmd.__doc__ = f.__doc__
-        return cmd
-
-    return decorator
+    return click_command(name=name, cls=cls, **attrs)
 
 
 def root(
@@ -92,9 +90,4 @@ def root(
     """
     cls = TaskioMultiCommand
 
-    def decorator(f: t.Callable[..., t.Any]) -> TaskioMultiCommand:
-        cmd = _make_command(f, name, attrs, cls)  # type: ignore
-        cmd.__doc__ = f.__doc__
-        return cmd
-
-    return decorator
+    return command(name=name, cls=cls, **attrs)
