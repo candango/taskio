@@ -17,12 +17,7 @@
 from . import process
 import click
 from click.core import Command, Context, Group, HelpFormatter
-import os
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
-import sys
-
-
-__multi_command__ = None
 
 
 class TaskioContext(Context):
@@ -65,7 +60,6 @@ class TaskioMultiCommand(click.MultiCommand):
         self.conf = {}
         if "taskio_conf" in attrs:
             self.conf = attrs.pop("taskio_conf")
-            sys.modules[__name__].__multi_command__ = self
         self.loader = process.TaskioLoader(self.conf, self)
         self.loader.load()
         if "taskio_conf" in attrs:
@@ -74,6 +68,25 @@ class TaskioMultiCommand(click.MultiCommand):
         super().__init__(name, invoke_without_command, no_args_is_help,
                          subcommand_metavar, chain, result_callback, **attrs)
         self.context_class = TaskioContext
+
+    def __new__(cls, *args, **kwargs):
+        """ Set TaskioMultiCommand as a singleton following:
+        https://bit.ly/3rGdBjh
+        :param args:
+        :param kwargs:
+        """
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(
+                TaskioMultiCommand, cls).__new__(cls)
+        return cls.instance
+
+    @staticmethod
+    def get_instance():
+        """Return the TaskioMultiCommand previously created instance.
+        If called after a regular initialization, will generate an error due
+        to lack of parameters.
+        """
+        return TaskioMultiCommand.__new__(TaskioMultiCommand)
 
     def make_context(
         self,
@@ -138,23 +151,8 @@ class TaskioMultiCommand(click.MultiCommand):
 
 class TaskioGroup(Group):
 
-    def __init__(
-        self,
-        name: Optional[str] = None,
-        commands: Optional[Union[Dict[str, Command],
-                                 Sequence[Command]]] = None,
-        **attrs: Any,
-    ) -> None:
-        super().__init__(name, commands, **attrs)
-        self._multi_command = sys.modules[__name__].__multi_command__
-
     def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
-        pieces = self.collect_usage_pieces(ctx)
-        formatter.write(self._multi_command.loader.full_name)
-        formatter.write("\n")
-        prog = "%s %s" % (self._multi_command.loader.name,
-                          self.resolve_params(ctx))
-        formatter.write_usage(prog, " ".join(pieces))
+        TaskioMultiCommand.get_instance().format_usage(ctx, formatter)
 
     def resolve_params(self, ctx):
         params = ""
@@ -198,10 +196,7 @@ class TaskioGroup(Group):
 class TaskioCommand(Command):
 
     def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
-        pieces = self.collect_usage_pieces(ctx)
-        formatter.write(self.loader.full_name)
-        formatter.write("\n")
-        formatter.write_usage(self.loader.name, " ".join(pieces))
+        TaskioMultiCommand.get_instance().format_usage(ctx, formatter)
 
 
 class TaskioCliContext(object):
