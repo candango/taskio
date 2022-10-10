@@ -24,12 +24,6 @@ import sys
 logger = logging.getLogger(__name__)
 
 
-class TaskioContext(object):
-
-    def __init__(self, conf, **kwargs):
-        self._conf = conf
-
-
 class TaskioLoader(object):
 
     def __init__(self, conf, program=None, **kwargs):

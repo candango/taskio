@@ -16,7 +16,7 @@
 
 __author__ = "Flávio Gonçalves Garcia <piraz@candango.org>"
 __description__ = "A Python library for command-line argument processing."
-__version__ = (0, 0, 4)
+__version__ = (0, 0, 5)
 __licence__ = "Apache License V2.0"
 
 
@@ -33,8 +33,14 @@ def get_author_email():
 
 
 try:
+    from .core import TaskioCliContext as CliContext
+    from .core import TaskioContext as Context
     from .core import TaskioMultiCommand as MultiCommand
+    from .decorators import command as command
     from .decorators import group as group
     from .decorators import root as root
-except:
+    from click import make_pass_decorator as make_pass_decorator
+# Will try to load modules not found during a clean installation.
+# Ignoring this error here.
+except ModuleNotFoundError:
     pass
