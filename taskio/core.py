@@ -1,6 +1,4 @@
-# -*- coding: UTF-8 -*-
-#
-# Copyright 2019-2022 Flávio Gonçalves Garcia
+# Copyright 2019-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import sys
 
 from . import process
 import click
 from click.core import Command, Context, Group, HelpFormatter
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional
 
 
 class TaskioContext(Context):
@@ -146,7 +145,11 @@ class TaskioMultiCommand(click.MultiCommand):
         pieces = self.collect_usage_pieces(ctx)
         formatter.write(self.loader.full_name)
         formatter.write("\n")
-        formatter.write_usage(self.loader.name, " ".join(pieces))
+        program_name = self.loader.name if self.loader.name else sys.argv[0]
+        if program_name != sys.argv[0]:
+            pieces.append("\n\n%s triggered by %s" %
+                          (program_name, sys.argv[0]))
+        formatter.write_usage(program_name, " ".join(pieces))
 
 
 class TaskioGroup(Group):

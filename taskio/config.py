@@ -1,6 +1,4 @@
-# -*- coding: UTF-8 -*-
-#
-# Copyright 2019-2022 Flávio Gonçalves Garcia
+# Copyright 2019-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,20 +15,11 @@
 from cartola.config import get_from_string
 
 
-def resolve_name(reference):
+def resolve_reference(reference):
     if reference is not None:
         result = get_from_string(reference)
         if result is not None:
             if callable(result):
                 return result()
             return result
-    return reference
-
-
-def resolve_version(reference):
-    if reference is not None:
-        result = get_from_string(reference)
-        if callable(result):
-            return result()
-        return result
     return reference
