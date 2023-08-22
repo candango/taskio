@@ -21,7 +21,7 @@ def task_function(cmd, namespace):
           cmd.context['a_value'])
 
 
-pass_context = taskio.make_pass_decorator(taskio.CliContext, ensure=True)
+pass_context = click.make_pass_decorator(taskio.CliContext, ensure=True)
 
 
 @taskio.command(short_help="Generates an uuid4 string")

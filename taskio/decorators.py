@@ -14,7 +14,7 @@
 
 from click.core import Command
 from click.decorators import command as click_command
-from .core import TaskioCommand, TaskioMultiCommand, TaskioGroup
+from .core import TaskioCommand, TaskioRootGroup, TaskioGroup
 import typing as t
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -86,6 +86,6 @@ def root(
     :param cls: the command class to instantiate.  This defaults to
                 :class:`Command`.
     """
-    cls = TaskioMultiCommand
+    cls = TaskioRootGroup
 
     return command(name=name, cls=cls, **attrs)

@@ -33,11 +33,10 @@ def get_author_email():
 try:
     from .core import TaskioCliContext as CliContext
     from .core import TaskioContext as Context
-    from .core import TaskioMultiCommand as MultiCommand
+    from .core import TaskioRootGroup as RootGroup
     from .decorators import command as command
     from .decorators import group as group
     from .decorators import root as root
-    from click import make_pass_decorator as make_pass_decorator
 # Will try to load modules not found during a clean installation.
 # Ignoring this error here.
 except ModuleNotFoundError:

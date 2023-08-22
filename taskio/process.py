@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from .config import resolve_reference
+from . import core
 from cartola import sysexits
 import importlib
 import logging
 import sys
-import taskio
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class TaskioLoader(object):
     _description: str | None
     _name: str | None
     _root: str
-    _program: "taskio.core.TaskioMultiCommand"
+    _program: "core.TaskioRootGroup"
     _sources: list
     _version: str | None
 
@@ -72,7 +72,7 @@ class TaskioLoader(object):
                 self._sources.append(importlib.import_module(source))
 
     @property
-    def program(self) -> "taskio.core.TaskioMultiCommand":
+    def program(self) -> "core.TaskioRootGroup":
         return self._program
 
     @property

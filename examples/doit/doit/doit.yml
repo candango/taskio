@@ -1,4 +1,4 @@
-taskio:
+doit:
   program:
     name: doit.__program_name__
     desc: doit.__program_desc__
