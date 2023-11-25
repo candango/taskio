@@ -1,9 +1,8 @@
-taskio:
+doit:
   program:
     name: doit.__program_name__
+    desc: doit.__program_desc__
     version: doit.__version__
-  commands:
-    - doit.commands._list
   sources:
     - doit.commands
     - doit.new_commands

@@ -1,6 +1,4 @@
-# -*- coding: UTF-8 -*-
-#
-# Copyright 2019-2022 Flávio Gonçalves Garcia
+# Copyright 2019-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +14,7 @@
 
 from click.core import Command
 from click.decorators import command as click_command
-from .core import TaskioCommand, TaskioMultiCommand, TaskioGroup
+from .core import TaskioCommand, TaskioRootGroup, TaskioGroup
 import typing as t
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -88,6 +86,6 @@ def root(
     :param cls: the command class to instantiate.  This defaults to
                 :class:`Command`.
     """
-    cls = TaskioMultiCommand
+    cls = TaskioRootGroup
 
     return command(name=name, cls=cls, **attrs)

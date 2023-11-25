@@ -18,4 +18,4 @@ to implement programs using Taskio and contribute with the project.
 
 **Apache License V2.0**
 
-Copyright © 2015-2022 Flavio Gonçalves Garcia
+Copyright © 2015-2023 Flavio Garcia

@@ -1,6 +1,4 @@
-# -*- coding: UTF-8 -*-
-#
-# Copyright 2019-2022 Flávio Gonçalves Garcia
+# Copyright 2019-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__author__ = "Flávio Gonçalves Garcia <piraz@candango.org>"
+__author__ = "Flavio Garcia <piraz@candango.org>"
 __description__ = "A Python library for command-line argument processing."
-__version__ = (0, 0, 5)
+__version__ = (0, 0, 6)
 __licence__ = "Apache License V2.0"
 
 
@@ -35,11 +33,10 @@ def get_author_email():
 try:
     from .core import TaskioCliContext as CliContext
     from .core import TaskioContext as Context
-    from .core import TaskioMultiCommand as MultiCommand
+    from .core import TaskioRootGroup as RootGroup
     from .decorators import command as command
     from .decorators import group as group
     from .decorators import root as root
-    from click import make_pass_decorator as make_pass_decorator
 # Will try to load modules not found during a clean installation.
 # Ignoring this error here.
 except ModuleNotFoundError:

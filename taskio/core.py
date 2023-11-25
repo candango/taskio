@@ -1,6 +1,4 @@
-# -*- coding: UTF-8 -*-
-#
-# Copyright 2019-2022 Flávio Gonçalves Garcia
+# Copyright 2019-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import sys
 
 from . import process
 import click
 from click.core import Command, Context, Group, HelpFormatter
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+import typing as t
+from typing import Any, Callable, Dict, List, Optional
 
 
 class TaskioContext(Context):
@@ -50,43 +50,46 @@ class TaskioContext(Context):
         self.loader = None
 
 
-class TaskioMultiCommand(click.MultiCommand):
+class TaskioRootGroup(Group):
 
     def __init__(
-            self, name=None, invoke_without_command: bool = False,
-            no_args_is_help=None, subcommand_metavar=None,
-            chain: bool = False, result_callback=None, **attrs,
+        self,
+        name: t.Optional[str] = None,
+        commands: t.Optional[
+            t.Union[t.Dict[str, Command], t.Sequence[Command]]
+        ] = None,
+        **attrs: t.Any,
     ) -> None:
         self.conf = {}
         if "taskio_conf" in attrs:
             self.conf = attrs.pop("taskio_conf")
-        self.loader = process.TaskioLoader(self.conf, self)
+        if "root" in attrs:
+            root = attrs.pop("root")
+        self.loader = process.TaskioLoader(self.conf, self, root=root)
         self.loader.load()
         if "taskio_conf" in attrs:
             if self.loader.full_name:
                 name = self.loader.full_name
-        super().__init__(name, invoke_without_command, no_args_is_help,
-                         subcommand_metavar, chain, result_callback, **attrs)
+        super().__init__(name, commands, **attrs)
         self.context_class = TaskioContext
 
     def __new__(cls, *args, **kwargs):
-        """ Set TaskioMultiCommand as a singleton following:
+        """ Set TaskioRootGroup as a singleton following:
         https://bit.ly/3rGdBjh
         :param args:
         :param kwargs:
         """
         if not hasattr(cls, 'instance'):
-            cls.instance = super(
-                TaskioMultiCommand, cls).__new__(cls)
+            cls.instance = super(TaskioRootGroup, cls).__new__(cls)
         return cls.instance
 
     @staticmethod
     def get_instance():
-        """Return the TaskioMultiCommand previously created instance.
+        """Return the TaskioRootGroup previously created instance.
         If called after a regular initialization, will generate an error due
         to lack of parameters.
         """
-        return TaskioMultiCommand.__new__(TaskioMultiCommand)
+        return TaskioRootGroup.__new__(TaskioRootGroup)
 
     def make_context(
         self,
@@ -146,13 +149,17 @@ class TaskioMultiCommand(click.MultiCommand):
         pieces = self.collect_usage_pieces(ctx)
         formatter.write(self.loader.full_name)
         formatter.write("\n")
-        formatter.write_usage(self.loader.name, " ".join(pieces))
+        program_name = self.loader.name if self.loader.name else sys.argv[0]
+        if program_name != sys.argv[0]:
+            pieces.append("\n\n%s triggered by %s" %
+                          (program_name, sys.argv[0]))
+        formatter.write_usage(program_name, " ".join(pieces))
 
 
 class TaskioGroup(Group):
 
     def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
-        TaskioMultiCommand.get_instance().format_usage(ctx, formatter)
+        TaskioRootGroup.get_instance().format_usage(ctx, formatter)
 
     def resolve_params(self, ctx):
         params = ""
@@ -196,7 +203,7 @@ class TaskioGroup(Group):
 class TaskioCommand(Command):
 
     def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
-        TaskioMultiCommand.get_instance().format_usage(ctx, formatter)
+        TaskioRootGroup.get_instance().format_usage(ctx, formatter)
 
 
 class TaskioCliContext(object):

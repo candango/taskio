@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2019-2022 Flávio Gonçalves Garcia
+# Copyright 2019-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,5 +20,5 @@ def get_version():
 
 
 __program_name__ = "doit"
-__program_description__ = "Example Program"
+__program_desc__ = "doit(Example Program)"
 __version__ = get_version

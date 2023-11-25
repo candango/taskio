@@ -1,4 +1,4 @@
-# Copyright 2019-2022 Flavio Gonçalves Garcia
+# Copyright 2019-2023 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from cartola.config import load_yaml_file
+import click
 import logging
 import os
 import taskio
@@ -27,10 +29,10 @@ DOIT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOIT_CONFIG_FILE = os.path.join(DOIT_ROOT, "doit", "doit.yml")
 
 
-pass_context = taskio.make_pass_decorator(taskio.CliContext, ensure=True)
+pass_context = click.make_pass_decorator(taskio.CliContext, ensure=True)
 
 
-@taskio.root(taskio_conf=load_yaml_file(DOIT_CONFIG_FILE))
+@taskio.root(root="doit", taskio_conf=load_yaml_file(DOIT_CONFIG_FILE))
 @pass_context
 def doit_cli(ctx):
     pass
