@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2015-2023 Flavio Garcia
+# Copyright 2015-2024 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ setup(
     maintainer=taskio.get_author(),
     maintainer_email=taskio.get_author_email(),
     install_requires=resolve_requires("requirements/basic.txt"),
-    python_requires=">= 3.6",
+    python_requires=">= 3.8",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
@@ -68,12 +68,11 @@ setup(
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3 :: Only",
         "Topic :: Software Development :: Libraries"
     ],
