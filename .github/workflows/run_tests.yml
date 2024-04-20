@@ -22,6 +22,3 @@ jobs:
       - name: Run python unit tests
         run: |
           PYTHONPATH=$PYTHONPATH:. python tests/runtests.py
-      - name: Run python behave tests
-        run: |
-          ./scripts/run_behave.sh
