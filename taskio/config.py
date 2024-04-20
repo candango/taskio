@@ -15,11 +15,11 @@
 from cartola.config import get_from_string
 
 
-def resolve_reference(reference):
+def resolve_reference(reference, **kwargs):
     if reference is not None:
         result = get_from_string(reference)
         if result is not None:
             if callable(result):
-                return result()
+                return result(**kwargs)
             return result
     return reference
