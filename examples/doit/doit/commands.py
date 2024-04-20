@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Flavio Garcia
+# Copyright 2019-2024 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@ pass_context = click.make_pass_decorator(taskio.CliContext, ensure=True)
 @taskio.command(short_help="Generates an uuid4 string")
 @click.argument("path", required=False, type=click.Path(resolve_path=True))
 @pass_context
-def uuid(ctx):
-    """Initializes a repository."""
-    print(ctx)
+def uuid(ctx, path):
+    from pprint import pprint
+    pprint(ctx.context.invoked_subcommand)
 
 
 @click.command(short_help="Do another thing")

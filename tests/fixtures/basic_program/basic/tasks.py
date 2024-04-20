@@ -25,8 +25,8 @@ class GenerateUuidTask(TaskioTask):
             return True
         return False
 
-    """ Generates an uuid4 string
-    """
     def run(self, namespace):
+        """ Generates an uuid4 string
+        """
         from uuid import uuid4
         print(uuid4())
