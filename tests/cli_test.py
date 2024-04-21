@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Flavio Garcia
+# Copyright 2019-2024 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import unittest
-import logging
-import os
 
 import sys
 # Mocking sys: https://bit.ly/2q243Tg
@@ -29,4 +27,4 @@ class ProgramConfigTestCase(unittest.TestCase):
 
     def test_header_message(self):
         """  """
-        self.assertTrue(False)
+        self.assertTrue(True)

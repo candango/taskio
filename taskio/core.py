@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Flavio Garcia
+# Copyright 2019-2024 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,43 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
 
 from . import process
 import click
 from click.core import Command, Context, Group, HelpFormatter
 import typing as t
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, List, Optional
+import sys
 
 
 class TaskioContext(Context):
 
-    def __init__(
-            self,
-            command: Command,
-            parent: Optional[Context] = None,
-            info_name: Optional[str] = None,
-            obj: Optional[Any] = None,
-            auto_envvar_prefix: Optional[str] = None,
-            default_map: Optional[Dict[str, Any]] = None,
-            terminal_width: Optional[int] = None,
-            max_content_width: Optional[int] = None,
-            resilient_parsing: bool = False,
-            allow_extra_args: Optional[bool] = None,
-            allow_interspersed_args: Optional[bool] = None,
-            ignore_unknown_options: Optional[bool] = None,
-            help_option_names: Optional[List[str]] = None,
-            token_normalize_func: Optional[Callable[[str], str]] = None,
-            color: Optional[bool] = None,
-            show_default: Optional[bool] = None,
-    ) -> None:
-        super().__init__(command, parent, info_name, obj, auto_envvar_prefix,
-                         default_map, terminal_width, max_content_width,
-                         resilient_parsing, allow_extra_args,
-                         allow_interspersed_args, ignore_unknown_options,
-                         help_option_names, token_normalize_func, color,
-                         show_default)
-        self.loader = None
+    loader: process.TaskioLoader
 
 
 class TaskioRootGroup(Group):

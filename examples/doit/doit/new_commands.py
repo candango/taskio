@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Flavio Gonçalves Garcia
+# Copyright 2019-2024 Flavio Gonçalves Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ from .cli import pass_context
 import click
 
 
-@click.command()
+@click.command(short_help="Do a cli thingy")
 @pass_context
 def cli1(ctx):
     print(ctx.context.loader.sources)

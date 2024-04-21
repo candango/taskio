@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Flavio Garcia
+# Copyright 2019-2024 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,13 +21,8 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-conf = {
-    'commands': []
-}
-
 DOIT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DOIT_CONFIG_FILE = os.path.join(DOIT_ROOT, "doit", "doit.yml")
-
 
 pass_context = click.make_pass_decorator(taskio.CliContext, ensure=True)
 

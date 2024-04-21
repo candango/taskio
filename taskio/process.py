@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Flavio Garcia
+# Copyright 2019-2024 Flavio Garcia
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,14 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
 
 from .config import resolve_reference
-from . import core
 from cartola import sysexits
 import importlib
 import logging
 import sys
+import typing
 
+if typing.TYPE_CHECKING:
+    from core import TaskioRootGroup
 
 logger = logging.getLogger(__name__)
 
@@ -26,22 +30,21 @@ logger = logging.getLogger(__name__)
 class TaskioLoader(object):
 
     _conf: dict
-    _description: str | None
-    _name: str | None
+    _description: str
+    _name: str
     _root: str
-    _program: "core.TaskioRootGroup"
+    _program: TaskioRootGroup
     _sources: list
-    _version: str | None
+    _version: str
 
-    def __init__(self, conf, program=None, **kwargs):
+    def __init__(self, conf, program: TaskioRootGroup = None, **kwargs):
         self._conf = conf
         self._root = kwargs.get("root", "taskio")
         self._program = program
         self._sources = []
         if not self._conf:
-            print(
-                "Taskio FATAL ERROR:\n Please provide a configuration to the "
-                "command.")
+            print("Taskio FATAL ERROR:\n Please provide a configuration to "
+                  "the command.")
             sys.exit(sysexits.EX_FATAL_ERROR)
         if not self._root or self._root not in self._conf:
             print("Taskio FATAL ERROR:\n  Please add a root to the command "
@@ -72,23 +75,23 @@ class TaskioLoader(object):
                 self._sources.append(importlib.import_module(source))
 
     @property
-    def program(self) -> "core.TaskioRootGroup":
+    def program(self) -> TaskioRootGroup:
         return self._program
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         if "program" in self.conf and "name" in self.conf['program']:
             return self.conf['program']['name']
         return None
 
     @property
-    def description(self) -> str | None:
+    def description(self) -> str:
         if "program" in self.conf and "description" in self.conf['program']:
             return self.conf['program']['description']
         return None
 
     @property
-    def version(self) -> str | None:
+    def version(self) -> str:
         if "program" in self.conf and "version" in self.conf['program']:
             return self.conf['program']['version']
         return None
